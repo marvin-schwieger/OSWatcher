@@ -1,11 +1,13 @@
+import tkinter as tk
+from tkinter import messagebox
 import datetime
+import time
 import os
 import platform 
 import socket 
-import tkinter as tk
-from tkinter import messagebox
 import ipaddress
 import json
+
 
 """ t = datetime.datetime.now()
 t = t.strftime("%c")
@@ -165,15 +167,16 @@ if __name__ == "__main__":
     server_addr = (agent.get_ip(), agent.get_port())
     server_interval = agent.get_interval()
     
-    # Establish a connection
     print(get_os_info())
     
+    # Establish a connection Try / Except is internally handled in connect function
     connection = connect(server_addr)
     print("Connected to server at", server_addr)
-
+    
     while True:
-        if(int(datetime.datetime.now().hour) % server_interval == 0):
-            send(connection, get_os_info())
-        else:
-            print("test")
-            
+        
+        send(connection, get_os_info())  
+        print("Data sent to server.")
+        time.sleep(server_interval * 3600)
+    connection.close()
+        
