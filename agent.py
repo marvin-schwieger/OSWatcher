@@ -5,6 +5,7 @@ import socket
 import tkinter as tk
 from tkinter import messagebox
 import ipaddress
+import json
 
 """ t = datetime.datetime.now()
 t = t.strftime("%c")
@@ -38,9 +39,11 @@ def get_os_info():
         "os": platform.system(),
         "os-version": platform.version()        
     }
+    # Convert into JSON
+    json_string = json.dumps(dic)
     
-    return dic
-    
+    return json_string
+
 def send(client, msg):
     pass
 
@@ -163,12 +166,14 @@ if __name__ == "__main__":
     server_interval = agent.get_interval()
     
     # Establish a connection
+    print(get_os_info())
+    
     connection = connect(server_addr)
+    print("Connected to server at", server_addr)
 
     while True:
         if(int(datetime.datetime.now().hour) % server_interval == 0):
             send(connection, get_os_info())
         else:
             print("test")
-    
-    
+            
