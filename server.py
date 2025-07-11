@@ -1,51 +1,68 @@
 import threading
 import socket 
+import csv
+import json
+
+# Get actual IP address by connecting to a public DNS server
+# This is a workaround to avoid getting VirtualBox host-only IP 
+def get_actual_ip() -> str:
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    return ip
 
 PORT = 5000
-SERVER = "localhost"
+SERVER = get_actual_ip()
 ADDR = (SERVER, PORT)
 FORMAT = "utf-8"
+FILE = "info.csv"
 
-clients = set()
+clients = set() # Set stores unique client addresses
 clients_lock = threading.Lock()
 
-def handle_client(conn, addr):
-    print(f"[NEW CONNECTION] {addr} Connected")
-    print(conn, addr)
+
+def handle_client(conn, addr) -> None:
+    print(f"[NEW CONNECTION] {addr} connected.")
     
     while True:
-        try:
-            # Receive one message (up to 1024 bytes)
-            msg = conn.recv(1024).decode(FORMAT)
-            if msg:
-                print(f"[{addr}] {msg}")
-            else:
-                print(f"[{addr}] No message received")
-        except Exception as e:
-            print(f"Error receiving message from {addr}: {e}")
-        finally:
-            # Remove client from set and close connection
-            #with clients_lock:
-            #    if conn in clients:
-            #        clients.remove(conn)
-            #conn.close()
-            #print(f"[CONNECTION CLOSED] {addr}")
-            print(clients)
+        # Receive one message (up to 1024 bytes)
+        msg = conn.recv(1024).decode(FORMAT)
+        print(type(msg))
+        if msg:
+            print(f"[{addr}] {msg}")
+            conn.send("[SUCCESS]".encode(FORMAT)) 
+        else:
+            print(f"[{addr}] No message received!")
+            break
+        
+        msg_decoded = json.loads(msg)
+        print(type(msg_decoded))
+        # here it shall write information from clients into one file
+        with clients_lock:
+            print("chekc")
+            if addr not in clients:
+                clients.add(addr)
+                with open(FILE, "w") as f:
+                    writer = csv.writer(f)
+                    for key, value in msg_decoded.items():
+                        print(f"{key}: {value}")
+                        print("Working?")
+                        writer.writerow([key, value])
 
-def start():
-    print('[SERVER STARTED]!')
+def start() -> None:
+    print("[SERVER STARTED]", SERVER)
     server = socket.create_server(ADDR, family=socket.AF_INET)
     server.listen()
-    thread_count = 0
     while True:
-        conn, addr = server.accept()
         
-        with clients_lock:
-            clients.add(addr)
+        conn, addr = server.accept()
+
+        #with clients_lock:
+        #    clients.add(addr)
             
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.start()
-        thread_count += 1
-        print(thread_count)
 
 start()
