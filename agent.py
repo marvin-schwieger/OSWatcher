@@ -8,47 +8,6 @@ import socket
 import ipaddress
 import json
 
-
-""" t = datetime.datetime.now()
-t = t.strftime("%c")
-print(t)
-print()
-print(f"OS: {platform.system()}\n"
-      f"Release: {platform.release()}\n"
-      f"Version: {platform.version()}")
-
-hostname = socket.gethostname()
-print(socket.gethostbyname(hostname))
-
-print(os.getlogin())
-def connect_to_server(server_ip, server_port):
-      client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      client.connect(server_ip, server_port)
-      
-       """
-def get_os_info():
-    t = datetime.datetime.now()
-    t = t.strftime("%c")
-    hostname = socket.gethostname()
-   
-    dic = dict()
-    
-    dic = {
-        "dest": hostname,
-        "dest-ip": socket.gethostbyname(hostname),
-        "user": os.getlogin(),
-        "time": t,
-        "os": platform.system(),
-        "os-version": platform.version()        
-    }
-    # Convert into JSON
-    json_string = json.dumps(dic)
-    
-    return json_string
-
-def send(client, msg):
-    pass
-
 class AgentGUI(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -150,6 +109,27 @@ class AgentGUI(tk.Tk):
     def get_port(self):
         return self.valid_port
     
+
+def get_os_info():
+    t = datetime.datetime.now()
+    t = t.strftime("%c")
+    hostname = socket.gethostname()
+   
+    dic = dict()
+    
+    dic = {
+        "dest": hostname,
+        "dest-ip": socket.gethostbyname(hostname),
+        "user": os.getlogin(),
+        "time": t,
+        "os": platform.system(),
+        "os-version": platform.version()        
+    }
+    # Convert into JSON
+    json_string = json.dumps(dic)
+    
+    return json_string
+
 def connect(server_addr):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(server_addr)
@@ -172,11 +152,11 @@ if __name__ == "__main__":
     # Establish a connection Try / Except is internally handled in connect function
     connection = connect(server_addr)
     print("Connected to server at", server_addr)
-    
+
     while True:
         
         send(connection, get_os_info())  
         print("Data sent to server.")
-        time.sleep(server_interval * 3600)
+        time.sleep(server_interval)
     connection.close()
         
