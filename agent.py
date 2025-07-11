@@ -109,17 +109,27 @@ class AgentGUI(tk.Tk):
     def get_port(self):
         return self.valid_port
     
+# Get actual IP address by connecting to a public DNS server
+# This is a workaround to avoid getting VirtualBox host-only IP 
+def get_actual_ip() -> str:
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    
+    return ip
 
 def get_os_info():
     t = datetime.datetime.now()
     t = t.strftime("%c")
     hostname = socket.gethostname()
-   
+    
     dic = dict()
     
     dic = {
         "dest": hostname,
-        "dest-ip": socket.gethostbyname(hostname),
+        "dest-ip": get_actual_ip(),
         "user": os.getlogin(),
         "time": t,
         "os": platform.system(),
@@ -127,6 +137,7 @@ def get_os_info():
     }
     # Convert into JSON
     json_string = json.dumps(dic)
+    print(json_string)
     
     return json_string
 
@@ -151,12 +162,21 @@ if __name__ == "__main__":
     
     # Establish a connection Try / Except is internally handled in connect function
     connection = connect(server_addr)
-    print("Connected to server at", server_addr)
+    print("[CONNECTED] to ", server_addr)
 
     while True:
         
         send(connection, get_os_info())  
         print("Data sent to server.")
-        time.sleep(server_interval)
+        
+        # Wait for server response
+        response = connection.recv(1024)        
+        if response:
+            print("[SUCCESS] Server response:", response.decode("utf-8"))
+            time.sleep(server_interval)
+        else:
+            print("[ERROR] No response from server. Closing connection.")
+            break
+    
     connection.close()
         
