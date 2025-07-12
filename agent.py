@@ -100,13 +100,13 @@ class AgentGUI(tk.Tk):
             return 
     
     # Getter         
-    def get_ip(self):
+    def get_ip(self) -> str:
         return self.valid_ip
     
-    def get_interval(self):
+    def get_interval(self) -> int:
         return self.valid_interval
     
-    def get_port(self):
+    def get_port(self) -> int:
         return self.valid_port
     
 # Get actual IP address by connecting to a public DNS server
@@ -120,13 +120,11 @@ def get_actual_ip() -> str:
     
     return ip
 
-def get_os_info():
+def get_os_info() -> str:
     t = datetime.datetime.now()
     t = t.strftime("%c")
     hostname = socket.gethostname()
-    
-    dic = dict()
-    
+
     dic = {
         "dest": hostname,
         "dest-ip": get_actual_ip(),
@@ -135,42 +133,38 @@ def get_os_info():
         "os": platform.system(),
         "os-version": platform.version()        
     }
-    # Convert into JSON
+    # Convert into JSON aka String
     json_string = json.dumps(dic)
-    print(json_string)
-    
+ 
     return json_string
 
-def connect(server_addr):
+def connect(server_addr) -> socket.socket:
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(server_addr)
     return client
-
-def send(client, msg):
-    message = msg.encode("utf-8")
-    client.send(message)
 
 if __name__ == "__main__":
     agent = AgentGUI()
     agent.mainloop()
     
     # Getter
-    server_addr = (agent.get_ip(), agent.get_port())
-    server_interval = agent.get_interval()
-    
+    server_addr: tuple = (agent.get_ip(), agent.get_port())
+    server_interval: int = agent.get_interval()
     print(get_os_info())
     
     # Establish a connection Try / Except is internally handled in connect function
-    connection = connect(server_addr)
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect(server_addr)
     print("[CONNECTED] to ", server_addr)
 
     while True:
         
-        send(connection, get_os_info())  
-        print("Data sent to server.")
+        msg = get_os_info().encode("utf-8")
+        client.send(msg)
+        print("[INFO] Data sent to server.")  
         
         # Wait for server response
-        response = connection.recv(1024)        
+        response = client.recv(1024)
         if response:
             print("[SUCCESS] Server response:", response.decode("utf-8"))
             time.sleep(server_interval)
@@ -178,5 +172,5 @@ if __name__ == "__main__":
             print("[ERROR] No response from server. Closing connection.")
             break
     
-    connection.close()
+    client.close()
         
