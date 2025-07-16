@@ -1,6 +1,5 @@
 import threading
 import socket 
-import csv
 import json
 
 # Get actual IP address by connecting to a public DNS server
@@ -17,7 +16,7 @@ PORT = 5000
 SERVER = get_actual_ip()
 ADDR = (SERVER, PORT)
 FORMAT = "utf-8"
-FILE = "info.csv"
+FILE = "test..."
 
 clients = set() # Set stores unique client addresses
 clients_lock = threading.Lock()
@@ -41,15 +40,9 @@ def handle_client(conn, addr) -> None:
         print(type(msg_decoded))
         # here it shall write information from clients into one file
         with clients_lock:
-            print("chekc")
+            print("check")
             if addr not in clients:
                 clients.add(addr)
-                with open(FILE, "w") as f:
-                    writer = csv.writer(f)
-                    for key, value in msg_decoded.items():
-                        print(f"{key}: {value}")
-                        print("Working?")
-                        writer.writerow([key, value])
 
 def start() -> None:
     print("[SERVER STARTED]", SERVER)
